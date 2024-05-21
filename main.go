@@ -23,10 +23,10 @@ func main() {
 
 	for i := 1; i < 4; i++ {
 		// now, you can submit transactions that will be queued in a node
-		node.NewTransaction(Wallet{Address: "me", Balance: Money{Amount: 100}}, Wallet{Address: "you", Balance: Money{Amount: 0}}, Money{Amount: 100})
+		node.SubmitTransaction(Wallet{Address: "me"}, Wallet{Address: "you"}, Money{Amount: 100})
 
 		// worker node will pack transactions into a block
-		block := node.NewBlock(fmt.Sprintf("Block %d", i), Metadata{})
+		block := node.PackageBlock(fmt.Sprintf("Block %d", i), Metadata{})
 
 		printJson("created block", block)
 
