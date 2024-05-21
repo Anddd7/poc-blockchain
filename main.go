@@ -11,7 +11,7 @@ func main() {
 
 	// first, you need to create a new chain or
 	// load an existing chain from the disk or network
-	chain := NewChain(1)
+	chain := NewChain(5)
 
 	printJson("loaded chain", chain)
 

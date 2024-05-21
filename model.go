@@ -5,11 +5,9 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"strings"
 	"time"
-)
-
-const (
-	GENESIS_NONCE = "000000"
 )
 
 // Block the data structure that represents the block in the blockchain
@@ -65,8 +63,8 @@ func NewChain(difficulty int) Chain {
 		Difficulty: difficulty,
 		Blocks: []Block{
 			{
-				Hash:     Hash{Nouce: GENESIS_NONCE},
-				Metadata: Metadata{"name": "Genesis Block"},
+				Hash:      Hash{Nouce: fmt.Sprintf("%064x", 0)},
+				Metadata:  Metadata{"name": "Genesis Block"},
 				Timestamp: time.Now(),
 			},
 		},
@@ -106,20 +104,24 @@ func (n *Node) Nonce(block Block) (Block, error) {
 	if err != nil {
 		return Block{}, err
 	}
-	nouce := n.hash(value)
-	block.Hash.Nouce = nouce
+
+	// simulate the proof of work, high difficulty means longer time to compute
+	// when multiple nodes are competing to mine the block
+	// only the node with the highest computation power will win
+	hash := ""
+	nonce := 0
+	for !strings.HasPrefix(hash, strings.Repeat("0", n.Chain.Difficulty)) {
+		nonce = nonce + 1
+		hash = n.hash(value + fmt.Sprintf("%d", nonce))
+	}
+
+	block.Hash.Nouce = hash
 
 	return block, nil
 }
 
 // hash the proof of work function
 func (n *Node) hash(value string) string {
-	// use sleep to simulate the proof of work
-	// high difficulty means longer time to compute
-	// when multiple nodes are competing to mine the block
-	// only the node with the highest computation power will win
-	time.Sleep(time.Second * time.Duration(n.Chain.Difficulty))
-
 	hasher := sha256.New()
 	hasher.Write([]byte(value))
 	return hex.EncodeToString(hasher.Sum(nil))
