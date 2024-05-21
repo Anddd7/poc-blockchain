@@ -91,3 +91,22 @@ func (n *Node) Broadcast(block Block) error {
 
 	return nil
 }
+
+// ReceiveBlock receive a block from the network
+func (n *Node) ReceiveBlock(block Block) error {
+	// the node will try to accept the block and add to the chain
+	// but sometimes, the validation will fail - forked chain, invalid block, etc
+	if n.Chain.VerifyBlock(block) {
+		n.Chain.AddBlock(block)
+	}
+
+	// if you got a forked chain, you need to choose the longest chain
+	// - find the nearest and in-chain parent
+	// -- if the parent is not in local chain, you need to request more info from the network
+	// -- check the height, pick the longest chain
+	// - drop and rollback the invalid chain
+	// -- re-queue the transactions
+	// -- re-package the block
+
+	return nil
+}
