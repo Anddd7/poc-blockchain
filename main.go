@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"sync"
 )
 
 func main() {
@@ -22,51 +21,24 @@ func main() {
 
 	printJson("started node", node)
 
-	// now, you can execute transactions in a new block
-	blocks := make(chan Block)
-	stop := make(chan struct{})
-	waitGroup := sync.WaitGroup{}
-	waitGroup.Add(1)
+	for i := 1; i < 4; i++ {
+		// now, you can submit transactions that will be queued in a node
+		node.NewTransaction(Wallet{Address: "me", Balance: Money{Amount: 100}}, Wallet{Address: "you", Balance: Money{Amount: 0}}, Money{Amount: 100})
 
-	// each block contains a list of transactions and metadata
-	go func() {
-		blocks <- node.NewBlock("Block 1", []Transaction{}, Metadata{})
-		blocks <- node.NewBlock("Block 2", []Transaction{}, Metadata{})
-		blocks <- node.NewBlock("Block 3", []Transaction{
-			{
-				From:  Wallet{Address: "me", Balance: Money{Amount: 100}},
-				To:    Wallet{Address: "you", Balance: Money{Amount: 0}},
-				Value: Money{Amount: 100},
-			},
-		}, Metadata{})
-		stop <- struct{}{}
-	}()
+		// worker node will pack transactions into a block
+		block := node.NewBlock(fmt.Sprintf("Block %d", i), Metadata{})
 
-	// when a block is created, the node will try to "mine" it -
-	// find a nonce that satisfies the difficulty level
-	// then broadcast the block to the network to be added to the chain globally
-	go func() {
-		defer waitGroup.Done()
-		for {
-			select {
-			case block := <-blocks:
-				printJson("created block", block)
+		printJson("created block", block)
 
-				signed, _ := node.Nonce(block)
+		// then, the block will be signed and broadcasted to the network
+		signed, _ := node.Nonce(block)
 
-				printJson("signed block", signed)
+		printJson("signed block", signed)
 
-				_ = node.Broadcast(signed)
-				node.Chain.AddBlock(signed)
-
-				fmt.Printf("block %s added to the chain\n", signed.Metadata["name"])
-			case <-stop:
-				return
-			}
-		}
-	}()
-
-	waitGroup.Wait()
+		_ = node.Broadcast(signed)
+		node.Chain.AddBlock(signed)
+		node.Mempool = []Transaction{}
+	}
 
 	printTable(node.Chain)
 }

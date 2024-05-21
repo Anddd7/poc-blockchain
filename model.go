@@ -83,16 +83,28 @@ func (c *Chain) LatestHash() Hash {
 
 // Node the agent that hosts blockchain network
 type Node struct {
-	Chain Chain
+	Chain   Chain
+	Mempool []Transaction
+}
+
+// NewTransaction create a new transaction in current node
+func (n *Node) NewTransaction(from Wallet, to Wallet, value Money) error {
+	n.Mempool = append(n.Mempool, Transaction{
+		From:  from,
+		To:    to,
+		Value: value,
+	})
+
+	return nil
 }
 
 // NewBlock create a new block in current node
-func (n *Node) NewBlock(name string, transactions []Transaction, metadata Metadata) Block {
+func (n *Node) NewBlock(name string, metadata Metadata) Block {
 	metadata["name"] = name
 
 	return Block{
 		PreHash:      n.Chain.LatestHash(),
-		Transactions: transactions,
+		Transactions: n.Mempool,
 		Metadata:     metadata,
 		Timestamp:    time.Now(),
 	}
