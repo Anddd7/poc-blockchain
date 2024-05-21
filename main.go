@@ -36,8 +36,7 @@ func main() {
 		printJson("signed block", signed)
 
 		_ = node.Broadcast(signed)
-		node.Chain.AddBlock(signed)
-		node.Mempool = []Transaction{}
+		
 	}
 
 	printTable(node.Chain)

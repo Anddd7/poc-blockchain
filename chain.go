@@ -14,8 +14,39 @@ func NewChain(difficulty int) Chain {
 	}
 }
 
+func (c *Chain) VerifyBlock(block Block) bool {
+	// check block is valid, e.g. hash, transactions
+	// check parent is existing
+	parent := c.Find(block.PreHash)
+	return parent != nil
+}
+
+// Find find a block by hash
+func (c *Chain) Find(hash Hash) *Block {
+	for _, block := range c.Blocks {
+		if block.Hash == hash {
+			return &block
+		}
+	}
+	return nil
+}
+
 // AddBlock add a new block to the chain after broadcast is successful
 func (c *Chain) AddBlock(block Block) {
+	// if we got multiple blocks at the same time, somehow conflict will occur
+	
+	// * keep longest chain, choose the block that has nearest parent
+	// A -- B -- C
+	// 	\-- D
+	// while C and D are broadcasted at the same time, we choose C
+
+	// * invalid block will be dropped
+	// but, if that block is already in local chain, we'll replace/repair the chain
+	// A -- B -- C
+	//  \-- D -- E -- F
+	// D,E,F has been approved in the network, so the B -- C needs to be rollbacked
+
+
 	c.Blocks = append(c.Blocks, block)
 }
 

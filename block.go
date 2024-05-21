@@ -17,7 +17,7 @@ type Block struct {
 
 // Hash the indentifier of the block
 type Hash struct {
-	Nouce string
+	Value string
 }
 
 // Metadata the extensible data of the block
@@ -49,7 +49,7 @@ func (b *Block) toString() (string, error) {
 // InitGenesisBlock create a genesis block
 func InitGenesisBlock() Block {
 	return Block{
-		Hash:      Hash{Nouce: fmt.Sprintf("%064x", 0)},
+		Hash:      Hash{Value: fmt.Sprintf("%064x", 0)},
 		Metadata:  Metadata{"name": "Genesis Block"},
 		Timestamp: time.Now(),
 	}

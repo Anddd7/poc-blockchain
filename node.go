@@ -3,7 +3,6 @@ package main
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -11,8 +10,9 @@ import (
 
 // Node the agent that hosts blockchain network
 type Node struct {
-	Chain   Chain
-	Mempool []Transaction
+	Chain     Chain
+	Mempool   []Transaction
+	Connected []Node
 }
 
 // SubmitTransaction create a new transaction in current node
@@ -55,7 +55,7 @@ func (n *Node) Nonce(block Block) (Block, error) {
 		hash = n.hash(value + fmt.Sprintf("%d", nonce))
 	}
 
-	block.Hash.Nouce = hash
+	block.Hash.Value = hash
 
 	return block, nil
 }
@@ -69,5 +69,25 @@ func (n *Node) hash(value string) string {
 
 // Broadcast the block to the network
 func (n *Node) Broadcast(block Block) error {
-	return errors.New("Not implemented")
+	if n.Chain.VerifyBlock(block) {
+		n.Chain.AddBlock(block)
+		n.Mempool = []Transaction{}
+	}
+
+	// broadcast to other node
+	approved := 0
+	for _, node := range n.Connected {
+		if node.Chain.VerifyBlock(block) {
+			approved++
+		}
+	}
+
+	// if less than half of the network approved the block, rollback
+	if approved < len(n.Connected)/2 {
+		// rollback the block
+		n.Chain.Blocks = n.Chain.Blocks[:len(n.Chain.Blocks)-1]
+		n.Mempool = append(n.Mempool, block.Transactions...)
+	}
+
+	return nil
 }
